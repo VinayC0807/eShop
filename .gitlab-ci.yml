@@ -1,0 +1,114 @@
+# GitLab CI/CD Pipeline for eShop Deployment
+# Converts GitHub Actions workflow to GitLab CI/CD
+
+stages:
+  - build
+  - infrastructure
+  - deploy
+
+variables:
+  DOTNET_VERSION: "8.0.x"
+  TERRAFORM_VERSION: "1.5.0"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+
+# Build and Test Stage
+build:
+  stage: build
+  image: mcr.microsoft.com/dotnet/sdk:8.0
+  before_script:
+    - dotnet --version
+  script:
+    - echo "Building .NET application..."
+    - dotnet build src/WebApp/WebApp.csproj --configuration Release
+  artifacts:
+    paths:
+      - src/WebApp/bin/Release/
+    expire_in: 1 hour
+  only:
+    - main
+    - merge_requests
+
+# Infrastructure Deployment Stage
+infrastructure:
+  stage: infrastructure
+  image: 
+    name: hashicorp/terraform:1.5.0
+    entrypoint: [""]
+  before_script:
+    # Install Azure CLI
+    - apk add --no-cache curl
+    - curl -sL https://aka.ms/InstallAzureCLIDeb | sh
+    # Azure Login using Service Principal
+    - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+    - az account set --subscription $AZURE_SUBSCRIPTION_ID
+  script:
+    - cd infrastructure
+    - terraform init
+    - terraform plan -out=tfplan
+    - terraform apply -auto-approve tfplan
+    # Export outputs for next stage
+    - echo "WEB_APP_NAME=$(terraform output -raw web_app_name)" > ../terraform_outputs.env
+    - echo "RESOURCE_GROUP_NAME=$(terraform output -raw resource_group_name)" >> ../terraform_outputs.env
+    - echo "WEB_APP_URL=$(terraform output -raw web_app_url)" >> ../terraform_outputs.env
+  artifacts:
+    reports:
+      dotenv: terraform_outputs.env
+    paths:
+      - infrastructure/.terraform/
+      - terraform_outputs.env
+    expire_in: 1 hour
+  only:
+    - main
+
+# Docker Build and Deploy Stage
+deploy:
+  stage: deploy
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  before_script:
+    # Install Azure CLI
+    - apk add --no-cache curl py3-pip
+    - pip3 install azure-cli
+    # Azure Login
+    - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+    - az account set --subscription $AZURE_SUBSCRIPTION_ID
+    # Docker Hub Login
+    - echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin
+  script:
+    # Build and Push Docker Image
+    - echo "Building Docker image..."
+    - docker build -t $DOCKERHUB_USERNAME/eshop:latest .
+    - docker build -t $DOCKERHUB_USERNAME/eshop:$CI_COMMIT_SHA .
+    - echo "Pushing Docker image to Docker Hub..."
+    - docker push $DOCKERHUB_USERNAME/eshop:latest
+    - docker push $DOCKERHUB_USERNAME/eshop:$CI_COMMIT_SHA
+    
+    # Deploy to Azure Web App
+    - echo "Deploying to Azure Web App..."
+    - |
+      az webapp config container set \
+        --name $WEB_APP_NAME \
+        --resource-group $RESOURCE_GROUP_NAME \
+        --docker-custom-image-name "$DOCKERHUB_USERNAME/eshop:latest" \
+        --docker-registry-server-url "https://index.docker.io"
+    
+    - |
+      az webapp restart \
+        --name $WEB_APP_NAME \
+        --resource-group $RESOURCE_GROUP_NAME
+    
+    - echo "🚀 App deployed at $WEB_APP_URL"
+  dependencies:
+    - infrastructure
+  only:
+    - main
+
+# Manual deployment trigger
+deploy_manual:
+  stage: deploy
+  extends: deploy
+  when: manual
+  only:
+    - main
