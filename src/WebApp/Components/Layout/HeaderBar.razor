@@ -27,7 +27,6 @@
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
 
-    // We can use Endpoint Metadata to determine the page currently being visited
-    private Type? PageComponentType => HttpContext?.GetEndpoint()?.Metadata.OfType<ComponentTypeMetadata>().FirstOrDefault()?.Type;
-    private bool IsCatalog => PageComponentType == typeof(Pages.Catalog.Catalog);
+    // Simplified for standalone deployment - always use default header
+    private bool IsCatalog => false;
 }

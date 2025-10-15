@@ -20,12 +20,16 @@
   <ItemGroup>
     <Compile Remove="Services\OrderStatus\**" />
     <Compile Remove="Extensions\Extensions.cs" />
+    <Compile Remove="Services\BasketState.cs" />
+    <Compile Remove="Services\LogOutService.cs" />
     <Content Remove="Components\Pages\User\**" />
     <Content Remove="Components\Pages\Catalog\**" />
     <Content Remove="Components\Pages\Item\**" />
     <Content Remove="Components\Pages\Cart\**" />
     <Content Remove="Components\Pages\Checkout\**" />
     <Content Remove="Components\Chatbot\**" />
+    <Content Remove="Components\Layout\UserMenu.razor" />
+    <Content Remove="Components\Layout\CartMenu.razor" />
     <!-- Also exclude the associated CSS files -->
     <None Remove="Components\Pages\User\**" />
     <None Remove="Components\Pages\Catalog\**" />
