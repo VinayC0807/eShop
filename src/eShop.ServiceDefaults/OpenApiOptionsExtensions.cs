@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Any;
 using System.Text.Json.Nodes;
 
 namespace eShop.ServiceDefaults;
@@ -121,7 +122,10 @@ internal static class OpenApiOptionsExtensions
             operation.Responses.TryAdd("401", new OpenApiResponse { Description = "Unauthorized" });
             operation.Responses.TryAdd("403", new OpenApiResponse { Description = "Forbidden" });
 
-            var oAuthScheme = new OpenApiSecuritySchemeReference("oauth2", null);
+            var oAuthScheme = new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "oauth2" }
+            };
 
             operation.Security = new List<OpenApiSecurityRequirement>
             {
@@ -160,10 +164,10 @@ internal static class OpenApiOptionsExtensions
                 {
                     switch (context.DocumentName) {
                         case "v1":
-                            targetSchema.Example = JsonNode.Parse("\"1.0\"");
+                            targetSchema.Example = new OpenApiString("1.0");
                             break;
                         case "v2":
-                            targetSchema.Example = JsonNode.Parse("\"2.0\"");
+                            targetSchema.Example = new OpenApiString("2.0");
                             break;
                     }
                 }
@@ -200,7 +204,7 @@ internal static class OpenApiOptionsExtensions
                 }
             };
             document.Components ??= new();
-            document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();  
+            document.Components.SecuritySchemes ??= new Dictionary<string, OpenApiSecurityScheme>();  
             document.Components.SecuritySchemes.Add("oauth2", securityScheme);
             return Task.CompletedTask;
         }
