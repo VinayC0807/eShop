@@ -16,6 +16,12 @@
     <ProjectReference Include="..\WebAppComponents\WebAppComponents.csproj" />
   </ItemGroup>
 
+  <!-- Exclude files that depend on EventBus for standalone deployment -->
+  <ItemGroup>
+    <Compile Remove="Services\OrderStatus\**" />
+    <Compile Remove="Extensions\Extensions.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Http.Client" />
     <PackageReference Include="Aspire.Azure.AI.OpenAI" />
