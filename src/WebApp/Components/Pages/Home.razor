@@ -1,0 +1,109 @@
+@page "/"
+@page "/home"
+
+<PageTitle>eShop - Standalone Mode</PageTitle>
+
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">Welcome to eShop</h1>
+        <p class="hero-subtitle">Standalone Deployment Mode</p>
+        <div class="hero-description">
+            <p>This is a simplified version of the eShop application running in standalone mode.</p>
+            <p>The full microservices architecture has been simplified for single-container deployment.</p>
+        </div>
+    </div>
+</div>
+
+<div class="info-section">
+    <div class="card">
+        <h3>🚀 Deployment Successful</h3>
+        <p>Your application has been successfully deployed to Azure Web App.</p>
+    </div>
+    
+    <div class="card">
+        <h3>🏗️ Architecture</h3>
+        <p>This deployment uses:</p>
+        <ul>
+            <li>Azure Web App</li>
+            <li>Docker Container</li>
+            <li>Terraform Infrastructure</li>
+            <li>GitHub Actions CI/CD</li>
+        </ul>
+    </div>
+    
+    <div class="card">
+        <h3>🔧 Technology Stack</h3>
+        <ul>
+            <li>.NET 9.0</li>
+            <li>Blazor Server</li>
+            <li>ASP.NET Core</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 4rem 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .hero-title {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        font-weight: bold;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+    }
+    
+    .hero-description {
+        max-width: 600px;
+        margin: 0 auto;
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+    
+    .info-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .card {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .card h3 {
+        color: #2d3748;
+        margin-bottom: 1rem;
+        font-size: 1.25rem;
+    }
+    
+    .card p {
+        color: #4a5568;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    
+    .card ul {
+        color: #4a5568;
+        padding-left: 1.5rem;
+    }
+    
+    .card li {
+        margin-bottom: 0.5rem;
+    }
+</style>

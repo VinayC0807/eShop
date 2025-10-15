@@ -20,6 +20,12 @@
   <ItemGroup>
     <Compile Remove="Services\OrderStatus\**" />
     <Compile Remove="Extensions\Extensions.cs" />
+    <Content Remove="Components\Pages\User\**" />
+    <Content Remove="Components\Pages\Catalog\**" />
+    <Content Remove="Components\Pages\Item\**" />
+    <Content Remove="Components\Pages\Cart\**" />
+    <Content Remove="Components\Pages\Checkout\**" />
+    <Content Remove="Components\Chatbot\**" />
   </ItemGroup>
 
   <ItemGroup>
