@@ -32,13 +32,14 @@ build:
 # Infrastructure Deployment Stage
 infrastructure:
   stage: infrastructure
-  image: 
-    name: hashicorp/terraform:1.5.0
-    entrypoint: [""]
+  image: mcr.microsoft.com/azure-cli:latest
   before_script:
-    # Install Azure CLI
-    - apk add --no-cache curl
-    - curl -sL https://aka.ms/InstallAzureCLIDeb | sh
+    # Install Terraform
+    - apk add --no-cache wget unzip
+    - wget https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
+    - unzip terraform_1.5.0_linux_amd64.zip
+    - mv terraform /usr/local/bin/
+    - terraform --version
     # Azure Login using Service Principal
     - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
     - az account set --subscription $AZURE_SUBSCRIPTION_ID
@@ -47,10 +48,13 @@ infrastructure:
     - terraform init
     - terraform plan -out=tfplan
     - terraform apply -auto-approve tfplan
-    # Export outputs for next stage
+    # Export outputs for next stage (create in root directory)
     - echo "WEB_APP_NAME=$(terraform output -raw web_app_name)" > ../terraform_outputs.env
     - echo "RESOURCE_GROUP_NAME=$(terraform output -raw resource_group_name)" >> ../terraform_outputs.env
     - echo "WEB_APP_URL=$(terraform output -raw web_app_url)" >> ../terraform_outputs.env
+    # Verify the file was created
+    - ls -la ../terraform_outputs.env
+    - cat ../terraform_outputs.env
   artifacts:
     reports:
       dotenv: terraform_outputs.env
@@ -64,13 +68,17 @@ infrastructure:
 # Docker Build and Deploy Stage
 deploy:
   stage: deploy
-  image: docker:24.0.5
+  image: mcr.microsoft.com/azure-cli:latest
   services:
     - docker:24.0.5-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
   before_script:
-    # Install Azure CLI
-    - apk add --no-cache curl py3-pip
-    - pip3 install azure-cli
+    # Install Docker client
+    - apk add --no-cache docker-cli
     # Azure Login
     - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
     - az account set --subscription $AZURE_SUBSCRIPTION_ID
