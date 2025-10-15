@@ -37,6 +37,8 @@
     <None Remove="Components\Pages\Cart\**" />
     <None Remove="Components\Pages\Checkout\**" />
     <None Remove="Components\Chatbot\**" />
+    <None Remove="Components\Layout\UserMenu.razor.css" />
+    <None Remove="Components\Layout\CartMenu.razor.css" />
   </ItemGroup>
 
   <ItemGroup>
