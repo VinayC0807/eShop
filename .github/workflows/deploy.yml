@@ -1,0 +1,78 @@
+name: Build and Deploy eShop
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Build and Test
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Test Build
+      run: dotnet build src/WebApp/WebApp.csproj --configuration Release
+
+    # Infrastructure
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.5.0'
+        terraform_wrapper: false
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: |
+          {
+            "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+            "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+            "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
+            "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
+          }
+
+    - name: Deploy Infrastructure
+      working-directory: infrastructure
+      run: |
+        terraform init
+        terraform plan -out=tfplan
+        terraform apply tfplan
+        echo "web_app_name=$(terraform output -raw web_app_name)" >> $GITHUB_ENV
+        echo "resource_group_name=$(terraform output -raw resource_group_name)" >> $GITHUB_ENV
+        echo "web_app_url=$(terraform output -raw web_app_url)" >> $GITHUB_ENV
+
+    # Build Application Image
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and Push Application Image
+      run: |
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/eshop:latest .
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/eshop:latest
+
+    - name: Deploy Application to Azure Web App
+      run: |
+        az webapp config container set \
+          --name ${{ env.web_app_name }} \
+          --resource-group ${{ env.resource_group_name }} \
+          --docker-custom-image-name "${{ secrets.DOCKERHUB_USERNAME }}/eshop:latest" \
+          --docker-registry-server-url "https://index.docker.io"
+        
+        az webapp restart \
+          --name ${{ env.web_app_name }} \
+          --resource-group ${{ env.resource_group_name }}
+
+    - name: Show Deployment URL
+      run: echo "🚀 App deployed at ${{ env.web_app_url }}"
