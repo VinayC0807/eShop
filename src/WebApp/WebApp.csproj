@@ -26,6 +26,13 @@
     <Content Remove="Components\Pages\Cart\**" />
     <Content Remove="Components\Pages\Checkout\**" />
     <Content Remove="Components\Chatbot\**" />
+    <!-- Also exclude the associated CSS files -->
+    <None Remove="Components\Pages\User\**" />
+    <None Remove="Components\Pages\Catalog\**" />
+    <None Remove="Components\Pages\Item\**" />
+    <None Remove="Components\Pages\Cart\**" />
+    <None Remove="Components\Pages\Checkout\**" />
+    <None Remove="Components\Chatbot\**" />
   </ItemGroup>
 
   <ItemGroup>
